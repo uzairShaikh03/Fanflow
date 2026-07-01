@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FanFlow
 
-## Getting Started
+Find where Toronto fans are **actually going** to watch FIFA World Cup 2026 matches.
 
-First, run the development server:
+FanFlow layers crowd-intent ("48 Going") on top of venue listings. Venue catalog data is manually curated from [Watch Party Radar](https://watchpartyradar.com/?city=toronto) by Dashmote.
+
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Tailwind CSS + shadcn/ui
+- Supabase (Auth + PostgreSQL + RLS)
+- Vercel (deployment)
+
+## Security & npm
+
+- Only install packages from trusted sources (official Next.js, Supabase, etc.)
+- Use `package-lock.json` — run `npm ci` in production, not `npm install`
+- Never commit `.env.local` or service role keys
+- Run `npm run audit:prod` before deploying
+
+## Local setup
+
+### 1. Install dependencies
+
+```bash
+npm ci
+```
+
+### 2. Environment variables
+
+Copy `.env.example` to `.env.local` and fill in your Supabase keys:
+
+```bash
+cp .env.example .env.local
+```
+
+Get keys from **Supabase → Project Settings → API**.
+
+### 3. Run database migrations
+
+In **Supabase → SQL Editor**, run these files **in order**:
+
+1. `supabase/migrations/001_schema.sql`
+2. `supabase/migrations/002_rls.sql`
+3. `supabase/migrations/003_seed.sql`
+4. `supabase/migrations/004_fix_view_security.sql` (if not already run)
+
+### 3b. Update matches during the tournament
+
+See [`supabase/match-updates/README.md`](supabase/match-updates/README.md). Run the latest dated SQL file (e.g. `2026-07-01.sql`) daily to refresh the bracket.
+
+### 4. Configure OAuth (Checkpoint 3)
+
+In Supabase **Authentication → Providers**, enable Google and GitHub.
+
+Add redirect URL: `http://localhost:3000/auth/callback`
+
+### 5. Start dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy to Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Push to GitHub
+2. Import repo in Vercel
+3. Add the same env vars from `.env.local`
+4. Add production redirect URL in Supabase: `https://your-app.vercel.app/auth/callback`
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/app/           Pages and API routes
+src/components/    UI components
+src/lib/           Supabase clients, validation, helpers
+supabase/migrations/  SQL schema, RLS, seed data
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Private project.
